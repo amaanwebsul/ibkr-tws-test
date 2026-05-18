@@ -1,0 +1,13 @@
+node_modules/
+.env
+.ini
+*.log
+.DS_Store
+.zip
+.key
+.pem
+venv
+uploads/*
+alembic.ini
+__pycache__/
+*.pyc
