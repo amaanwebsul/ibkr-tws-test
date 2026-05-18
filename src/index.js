@@ -8,7 +8,6 @@ import marketRouter from "./routes/marketRoute.js";
 
 console.log(process.env.PORT, "PORT");
 
-
 const PORT = process.env.PORT;
 
 const app = express();
