@@ -1,4 +1,4 @@
-import ibClient from "./ibClient.js";
+import ibClient from "../ibkr/ibClient.js";
 
 export const getManagedAccounts = (req, res) => {
   try {

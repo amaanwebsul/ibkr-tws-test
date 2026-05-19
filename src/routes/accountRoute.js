@@ -1,10 +1,10 @@
 import express from "express";
-import { getAccountSummary, getManagedAccounts } from "../ibkr/account.js";
+import { getAccountSummary, getManagedAccounts } from "../controllers/account.js";
 
 const router = express.Router();
 
-router.get("/accounts", getManagedAccounts)
+router.get("/get", getManagedAccounts)
 
-router.get("/account-summary", getAccountSummary)
+router.get("/summary", getAccountSummary)
 
 export default router;

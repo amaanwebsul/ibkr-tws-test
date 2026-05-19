@@ -1,64 +1,124 @@
 import IB from "ib";
 
 class IBClient {
+
   constructor() {
+
     this.ib = null;
-    this.connected = false;
 
-    this.requestId = 1;
+    this.connected =
+      false;
 
-    this.statusCodes = [
-      2104, // market data farm ok
-      2106, // HMDS farm ok
-      2158, // sec-def farm ok
-      2107,
-      2108,
+    this.nextOrderId =
+      null;
+
+    // Informational messages
+    this.infoCodes = [
+      2104, // Market data farm OK
+      2106, // HMDS OK
+      2158, // Sec-def OK
+      2108, // HMDS inactive
+    ];
+
+    // Warning messages
+    this.warningCodes = [
+      2109, // TIF auto set
+      10167, // Delayed market data
+      10089, // Delayed market data available
+      399, // Order warnings (market closed, queued order, presets)
     ];
   }
 
   init() {
+
     this.ib = new IB({
-      host: process.env.IB_HOST,
-      port: Number(process.env.IB_PORT),
-      clientId: Number(
-        process.env.IB_CLIENT_ID
-      ),
+      host:
+        process.env.IB_HOST,
+
+      port:
+        Number(
+          process.env.IB_PORT
+        ),
+
+      clientId:
+        Number(
+          process.env.IB_CLIENT_ID
+        ),
     });
 
     this.setupEvents();
   }
 
-  getNextRequestId() {
-    return this.requestId++;
-  }
-
   setupEvents() {
 
+    // Connected
     this.ib.on(
       "connected",
       () => {
+
         console.log(
           "✅ IB Connected"
         );
 
-        this.connected = true;
+        this.connected =
+          true;
 
-        // optional:
-        this.requestCurrentTime();
+        // Ask IBKR
+        // for next valid order id
+        this.ib.reqIds(1);
+
+        // Ask gateway time
+        this.ib.reqCurrentTime();
       }
     );
 
+    // Disconnected
     this.ib.on(
       "disconnected",
       () => {
+
         console.log(
           "❌ IB Disconnected"
         );
 
-        this.connected = false;
+        this.connected =
+          false;
       }
     );
 
+    // Next valid order id
+    this.ib.on(
+      "nextValidId",
+      (
+        orderId
+      ) => {
+
+        console.log(
+          `📌 Next Order ID: ${orderId}`
+        );
+
+        this.nextOrderId =
+          orderId;
+      }
+    );
+
+    // Gateway time
+    this.ib.on(
+      "currentTime",
+      (
+        time
+      ) => {
+
+        console.log(
+          "🕒 Gateway Time:",
+          new Date(
+            time * 1000
+          ).toISOString()
+        );
+      }
+    );
+
+    // Error / Warning / Info handling
     this.ib.on(
       "error",
       (
@@ -68,25 +128,46 @@ class IBClient {
       ) => {
 
         const ibCode =
-          code?.code;
+          code?.code ??
+          code;
 
-        // Ignore informational status messages
+        const message =
+          err?.message ||
+          err;
+
+        // Info messages
         if (
-          this.statusCodes.includes(
+          this.infoCodes.includes(
             ibCode
           )
         ) {
+
           console.log(
-            `ℹ️ ${err.message}`
+            `ℹ️ ${message}`
           );
+
           return;
         }
 
+        // Warning messages
+        if (
+          this.warningCodes.includes(
+            ibCode
+          )
+        ) {
+
+          console.warn(
+            `⚠️ ${message}`
+          );
+
+          return;
+        }
+
+        // Real errors
         console.error(
           "❌ IB Error",
           {
-            message:
-              err?.message,
+            message,
             code:
               ibCode,
             reqId,
@@ -94,28 +175,21 @@ class IBClient {
         );
       }
     );
-
-    // Helpful heartbeat
-    this.ib.on(
-      "currentTime",
-      (time) => {
-        console.log(
-          "🕒 Gateway Time:",
-          new Date(
-            time * 1000
-          )
-        );
-      }
-    );
   }
 
   connect() {
 
-    if (!this.ib) {
+    if (
+      !this.ib
+    ) {
+
       this.init();
     }
 
-    if (!this.connected) {
+    if (
+      !this.connected
+    ) {
+
       console.log(
         "Connecting to IB..."
       );
@@ -124,33 +198,36 @@ class IBClient {
     }
   }
 
-  disconnect() {
-
-    if (
-      this.ib &&
-      this.connected
-    ) {
-      this.ib.disconnect();
-    }
-  }
-
-  requestCurrentTime() {
-
-    if (
-      this.ib &&
-      this.connected
-    ) {
-      this.ib.reqCurrentTime();
-    }
-  }
-
-  isConnected() {
-    return this.connected;
-  }
-
   getIB() {
+
+    if (
+      !this.ib
+    ) {
+
+      throw new Error(
+        "IB Client not initialized"
+      );
+    }
+
     return this.ib;
+  }
+
+  getNextOrderId() {
+
+    if (
+      this.nextOrderId
+      === null
+    ) {
+
+      throw new Error(
+        "Order ID not initialized yet"
+      );
+    }
+
+    return this
+      .nextOrderId++;
   }
 }
 
-export default new IBClient();
+export default
+  new IBClient();
