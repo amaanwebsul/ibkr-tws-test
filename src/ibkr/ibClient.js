@@ -12,6 +12,8 @@ class IBClient {
     this.nextOrderId =
       null;
 
+    this.nextRequestId = 1;
+
     // Informational messages
     this.infoCodes = [
       2104, // Market data farm OK
@@ -210,6 +212,11 @@ class IBClient {
     }
 
     return this.ib;
+  }
+
+
+  getNextRequestId() {
+    return this.nextRequestId++;
   }
 
   getNextOrderId() {
