@@ -16,18 +16,27 @@ export const buyStock = async (req, res) => {
     const orderId =
       ibClient.getNextOrderId();
 
+    // USD Payload
+    // const contract = {
+    //   symbol:
+    //     symbol.toUpperCase(),
+
+    //   secType:
+    //     "STK",
+
+    //   exchange:
+    //     "SMART",
+
+    //   currency:
+    //     "USD",
+    // };
+
+    // INR Payload
     const contract = {
-      symbol:
-        symbol.toUpperCase(),
-
-      secType:
-        "STK",
-
-      exchange:
-        "SMART",
-
-      currency:
-        "USD",
+      symbol: symbol.toUpperCase(),
+      secType: "STK",
+      exchange: "NSE",
+      currency: "INR",
     };
 
     const order = {
